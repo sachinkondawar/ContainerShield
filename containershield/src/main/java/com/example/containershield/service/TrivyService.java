@@ -64,12 +64,10 @@ public class TrivyService implements ContainerScanner {
 
             Process process = processBuilder.start();
 
-            // Read Trivy JSON output from stdout
             BufferedReader outputReader = new BufferedReader(
                     new InputStreamReader(process.getInputStream())
             );
 
-            // Read Trivy logs/errors separately from stderr
             BufferedReader errorReader = new BufferedReader(
                     new InputStreamReader(process.getErrorStream())
             );
@@ -89,14 +87,12 @@ public class TrivyService implements ContainerScanner {
 
             int exitCode = process.waitFor();
 
-            // If Trivy failed, show the actual error
             if (exitCode != 0) {
                 throw new RuntimeException(
                         "Trivy scan failed: " + errorOutput
                 );
             }
 
-            // Parse only stdout because it contains the JSON
             JsonNode root = objectMapper.readTree(
                     output.toString()
             );
@@ -123,21 +119,20 @@ public class TrivyService implements ContainerScanner {
 
                     String fullDescription = vulnerability
                             .path("Description")
-                            .asString();
+                            .asText("");
 
                     TrivyVulnerability dto = new TrivyVulnerability(
-                            vulnerability.path("VulnerabilityID").asString(),
-                            vulnerability.path("PkgName").asString(),
-                            vulnerability.path("InstalledVersion").asString(),
-                            vulnerability.path("FixedVersion").asString(),
-                            vulnerability.path("Severity").asString(),
-                            vulnerability.path("Title").asString(),
+                            vulnerability.path("VulnerabilityID").asText(""),
+                            vulnerability.path("PkgName").asText(""),
+                            vulnerability.path("InstalledVersion").asText(""),
+                            vulnerability.path("FixedVersion").asText(""),
+                            vulnerability.path("Severity").asText(""),
+                            vulnerability.path("Title").asText(""),
                             fullDescription
                     );
 
                     vulnerabilities.add(dto);
 
-                    // Truncate only for what gets persisted, not the API response
                     String storedDescription = fullDescription != null && fullDescription.length() > 500
                             ? fullDescription.substring(0, 500) + "..."
                             : fullDescription;

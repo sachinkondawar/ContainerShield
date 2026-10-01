@@ -15,14 +15,12 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class DockerService {
-    ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public List<DockerContainerEntity> getRunningContainers() {
-
         List<DockerContainerEntity> containers = new ArrayList<>();
 
         try {
-
             ProcessBuilder processBuilder = new ProcessBuilder(
                     "docker",
                     "ps",
@@ -37,17 +35,19 @@ public class DockerService {
             );
 
             String line;
-
             while ((line = reader.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
 
                 JsonNode jsonNode = objectMapper.readTree(line);
 
                 DockerContainerEntity container =
                         new DockerContainerEntity(
-                                jsonNode.get("ID").asString(),
-                                jsonNode.get("Names").asString(),
-                                jsonNode.get("Image").asString(),
-                                jsonNode.get("Status").asString()
+                                jsonNode.path("ID").asText(""),
+                                jsonNode.path("Names").asText(""),
+                                jsonNode.path("Image").asText(""),
+                                jsonNode.path("Status").asText("")
                         );
 
                 containers.add(container);
@@ -56,25 +56,23 @@ public class DockerService {
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                throw new RuntimeException("Docker command failed");
+                throw new RuntimeException("Docker command failed with exit code: " + exitCode);
             }
 
             return containers;
 
         } catch (Exception e) {
-
             throw new RuntimeException(
                     "Failed to retrieve running Docker containers",
                     e
             );
         }
     }
-    public List<DockerContainerEntity> getContainers(String flag) {
 
+    public List<DockerContainerEntity> getContainers(String flag) {
         List<DockerContainerEntity> containers = new ArrayList<>();
 
         try {
-
             ProcessBuilder processBuilder = new ProcessBuilder(
                     "docker",
                     "ps",
@@ -90,17 +88,19 @@ public class DockerService {
             );
 
             String line;
-
             while ((line = reader.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
 
                 JsonNode jsonNode = objectMapper.readTree(line);
 
                 DockerContainerEntity container =
                         new DockerContainerEntity(
-                                jsonNode.get("ID").asString(),
-                                jsonNode.get("Names").asString(),
-                                jsonNode.get("Image").asString(),
-                                jsonNode.get("Status").asString()
+                                jsonNode.path("ID").asText(""),
+                                jsonNode.path("Names").asText(""),
+                                jsonNode.path("Image").asText(""),
+                                jsonNode.path("Status").asText("")
                         );
 
                 containers.add(container);
@@ -109,13 +109,12 @@ public class DockerService {
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                throw new RuntimeException("Docker command failed");
+                throw new RuntimeException("Docker command failed with exit code: " + exitCode);
             }
 
             return containers;
 
         } catch (Exception e) {
-
             throw new RuntimeException(
                     "Failed to retrieve running Docker containers",
                     e
@@ -124,7 +123,6 @@ public class DockerService {
     }
 
     public List<DockerImageDTO> getDockerImages() throws Exception {
-
         ProcessBuilder processBuilder = new ProcessBuilder(
                 "docker",
                 "images",
@@ -141,20 +139,18 @@ public class DockerService {
         List<DockerImageDTO> images = new ArrayList<>();
 
         String line;
-
         while ((line = reader.readLine()) != null) {
-
             if (line.isBlank()) {
                 continue;
             }
 
             JsonNode node = objectMapper.readTree(line);
 
-            String id = node.get("ID").asString();
-            String repository = node.get("Repository").asString();
-            String tag = node.get("Tag").asString();
-            String size = node.get("Size").asString();
-            String created = node.get("CreatedSince").asString();
+            String id = node.path("ID").asText("");
+            String repository = node.path("Repository").asText("");
+            String tag = node.path("Tag").asText("");
+            String size = node.path("Size").asText("");
+            String created = node.path("CreatedSince").asText("");
 
             DockerImageDTO image = new DockerImageDTO(
                     id,
@@ -171,7 +167,4 @@ public class DockerService {
 
         return images;
     }
-
 }
-
-

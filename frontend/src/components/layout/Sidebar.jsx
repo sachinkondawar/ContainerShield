@@ -1,10 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Shield,
   LayoutDashboard,
   Box,
-  Layers,
   Search,
   History,
   Code2,
@@ -16,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
+import DockerIcon from '../common/DockerIcon';
 import { useTheme } from '../../context/ThemeContext';
 import { useSidebar } from '../../context/SidebarContext';
 
@@ -26,7 +26,7 @@ export default function Sidebar({ healthStatus, className = '' }) {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Containers', path: '/containers', icon: Box },
-    { label: 'Images', path: '/images', icon: Layers },
+    { label: 'Images', path: '/images', icon: DockerIcon },
     { label: 'Scan Image', path: '/scans/new', icon: Search },
     { label: 'Scan History', path: '/scans/history', icon: History },
     { label: 'Source Scanner', path: '/source-scan', icon: Code2 },

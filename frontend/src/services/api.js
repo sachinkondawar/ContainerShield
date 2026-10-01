@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 180000, // 3 minutes timeout for Trivy/Semgrep/Ollama LLM scans
+  timeout: 0, // Disabled timeout (0) for long-running scans and Ollama LLM requests
 });
 
 api.interceptors.response.use(

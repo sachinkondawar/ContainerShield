@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Search, RefreshCw, ShieldAlert, HardDrive } from 'lucide-react';
+import { Search, RefreshCw, ShieldAlert, HardDrive } from 'lucide-react';
+import DockerIcon from '../components/common/DockerIcon';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Skeleton from '../components/common/Skeleton';
@@ -70,7 +71,7 @@ export default function Images() {
         <ErrorState message={error} onRetry={fetchImages} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={Layers}
+          icon={DockerIcon}
           title={searchTerm ? 'No Matching Images' : 'No Docker Images Found'}
           description={
             searchTerm
@@ -103,7 +104,7 @@ export default function Images() {
                     >
                       {/* Name */}
                       <td className="py-3.5 px-4 text-slate-900 dark:text-slate-100 font-semibold flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                        <DockerIcon className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
                         <span>{img.name}</span>
                       </td>
 

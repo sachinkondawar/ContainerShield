@@ -1,33 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Terminal, CheckCircle2, XCircle, Activity, Server, Cpu, Database, Shield, Sun, Moon } from 'lucide-react';
+﻿import React from 'react';
+import { Sun, Moon, Server, Shield, Cpu, Database } from 'lucide-react';
 import Card from '../components/common/Card';
-import Button from '../components/common/Button';
-import { checkHealth } from '../services/healthService';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Settings() {
-  const { theme, setTheme, toggleTheme } = useTheme();
-  const [health, setHealth] = useState('checking');
-  const [testing, setTesting] = useState(false);
-
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
-  const testConnection = async () => {
-    try {
-      setTesting(true);
-      setHealth('checking');
-      await checkHealth();
-      setHealth('online');
-    } catch (err) {
-      setHealth('offline');
-    } finally {
-      setTesting(false);
-    }
-  };
-
-  useEffect(() => {
-    testConnection();
-  }, []);
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -67,62 +44,6 @@ export default function Settings() {
               <Moon className="w-4 h-4 text-indigo-400" />
               Dark Mode
             </button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Backend / API Settings Card */}
-      <Card title="Backend & API Configuration" subtitle="Environment settings for ContainerShield Spring Boot connection">
-        <div className="space-y-6 font-mono text-xs">
-          <div className="p-4 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-700/60 rounded-xl space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-semibold uppercase">API Base URL (Environment Variable)</span>
-              <span className="px-2 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950 dark:text-brand-400 dark:border-brand-800 text-[10px]">
-                VITE_API_BASE_URL
-              </span>
-            </div>
-            <p className="text-slate-900 dark:text-slate-100 font-bold text-sm">{apiBaseUrl}</p>
-            <p className="text-slate-500 dark:text-slate-500 font-sans text-xs">
-              To change this URL, update <code className="text-slate-700 dark:text-slate-300">VITE_API_BASE_URL</code> in your <code className="text-slate-700 dark:text-slate-300">frontend/.env</code> configuration file.
-            </p>
-          </div>
-
-          <div className="p-4 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-dark-700/60 rounded-xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Activity className="w-5 h-5 text-slate-400" />
-              <div>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">API Health Status (/health-check)</p>
-                <p className="text-[11px] text-slate-500 font-sans">Verifies REST endpoint responsiveness on port 8080</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                  health === 'online'
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800/50'
-                    : health === 'checking'
-                    ? 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800/50'
-                    : 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950 dark:text-rose-400 dark:border-rose-800/50'
-                }`}
-              >
-                {health === 'online' ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Connected
-                  </>
-                ) : health === 'checking' ? (
-                  <>Checking...</>
-                ) : (
-                  <>
-                    <XCircle className="w-3.5 h-3.5 mr-1.5" /> Disconnected
-                  </>
-                )}
-              </span>
-
-              <Button variant="secondary" size="sm" onClick={testConnection} isLoading={testing}>
-                Test Connection
-              </Button>
-            </div>
           </div>
         </div>
       </Card>

@@ -70,7 +70,6 @@ public class SemgrepService {
 
             int exitCode = process.waitFor();
 
-            // Semgrep exits with code 1 when it finds blocking issues — that's expected, not a failure
             if (exitCode != 0 && exitCode != 1) {
                 throw new RuntimeException("Semgrep scan failed: " + errorOutput);
             }
@@ -91,16 +90,16 @@ public class SemgrepService {
                 JsonNode vulnClassArray = metadata != null ? metadata.get("vulnerability_class") : null;
 
                 String vulnerabilityClass = (vulnClassArray != null && vulnClassArray.isArray() && !vulnClassArray.isEmpty())
-                        ? vulnClassArray.get(0).asString()
+                        ? vulnClassArray.get(0).asText("")
                         : "";
 
                 SemgrepFinding finding = new SemgrepFinding(
-                        result.path("check_id").asString(),
-                        result.path("path").asString(),
+                        result.path("check_id").asText(""),
+                        result.path("path").asText(""),
                         result.path("start").path("line").asInt(),
                         result.path("end").path("line").asInt(),
-                        extra != null ? extra.path("message").asString() : "",
-                        extra != null ? extra.path("severity").asString() : "",
+                        extra != null ? extra.path("message").asText("") : "",
+                        extra != null ? extra.path("severity").asText("") : "",
                         vulnerabilityClass
                 );
 

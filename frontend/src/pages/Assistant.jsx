@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Bot, Send, ShieldAlert, Sparkles, User, Terminal, Loader2, Info, ChevronRight, RefreshCw, FileText } from 'lucide-react';
 import Card from '../components/common/Card';
@@ -91,7 +91,7 @@ export default function Assistant() {
         ...prev,
         {
           role: 'assistant',
-          content: '⚠️ **Error:** Failed to generate answer. Ensure Ollama service is active and scan findings exist under this target name.',
+          content: 'âš ï¸ **Error:** Failed to generate answer. Ensure Ollama service is active and scan findings exist under this target name.',
           timestamp: new Date().toLocaleTimeString(),
           isError: true,
         },
@@ -260,13 +260,13 @@ export default function Assistant() {
                         onClick={() => handleSelectTarget(s.imageName)}
                         className={`p-2.5 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-950/60 dark:border-brand-500/80 dark:text-brand-300 font-bold'
+                            ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-dark-900 dark:border-brand-500 dark:text-brand-300 font-bold'
                             : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-dark-900/60 dark:border-dark-700/60 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                         }`}
                       >
                         <div>
                           <p className="font-semibold text-slate-900 dark:text-slate-200">{s.imageName}</p>
-                          <p className="text-[10px] text-slate-500">Scan #{s.id} • {s.totalVulnerabilities} vulnerabilities</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">Scan #{s.id} â€¢ {s.totalVulnerabilities} vulnerabilities</p>
                         </div>
                         {isSelected && <ChevronRight className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
                       </div>
@@ -302,3 +302,4 @@ export default function Assistant() {
     </div>
   );
 }
+

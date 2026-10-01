@@ -38,7 +38,7 @@ services:
       - containershield-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-containershield}" ]
       interval: 10s
       timeout: 5s
       retries: 5

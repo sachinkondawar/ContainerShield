@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Search, Calendar, ShieldAlert, Bot } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, ShieldAlert, Bot, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -38,10 +38,156 @@ export default function ScanDetails() {
     fetchScan();
   }, [id]);
 
+  const vulns = scan?.vulnerabilities || [];
+
+  const handleDownloadCSV = () => {
+    if (!vulns || vulns.length === 0) return;
+
+    const headers = ['Severity', 'Vulnerability ID', 'Package Name', 'Installed Version', 'Fixed Version', 'Title', 'Description'];
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = vulns.map((v) => [
+      escapeCSV(v.severity),
+      escapeCSV(v.vulnerabilityId),
+      escapeCSV(v.packageName),
+      escapeCSV(v.installedVersion || 'N/A'),
+      escapeCSV(v.fixedVersion || 'None'),
+      escapeCSV(v.title),
+      escapeCSV(v.description || '')
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const fileName = `vulnerability_scan_${(scan?.imageName || 'report').replace(/[^a-z0-9_-]/gi, '_')}_${scan?.id || 'details'}.csv`;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPDF = () => {
+    if (!scan) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to download/print PDF reports.');
+      return;
+    }
+
+    const dateStr = scan.scanDate ? new Date(scan.scanDate).toLocaleString() : new Date().toLocaleString();
+    const imageName = scan.imageName || 'Target Image';
+
+    const vulnsRowsHtml = vulns
+      .map(
+        (v) => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: ${
+          v.severity === 'CRITICAL' ? '#be123c' : v.severity === 'HIGH' ? '#c2410c' : v.severity === 'MEDIUM' ? '#b45309' : '#047857'
+        };">${v.severity || 'UNKNOWN'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold; font-family: monospace;">${v.vulnerabilityId || 'N/A'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace;">${v.packageName || 'N/A'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${v.installedVersion || 'N/A'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #047857; font-weight: bold;">${v.fixedVersion || 'None'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${(v.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+      </tr>
+    `
+      )
+      .join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>ContainerShield Security Scan Report - ${imageName}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #0f172a; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 16px; margin-bottom: 24px; }
+            .logo { font-size: 24px; font-weight: 800; color: #0284c7; letter-spacing: -0.5px; }
+            .subtitle { font-size: 12px; color: #64748b; font-family: monospace; }
+            .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+            .summary-card { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; }
+            .summary-card .label { font-size: 10px; text-transform: uppercase; font-weight: bold; color: #64748b; }
+            .summary-card .val { font-size: 20px; font-weight: bold; margin-top: 4px; font-family: monospace; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
+            th { background: #f8fafc; text-align: left; padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 10px; color: #475569; }
+            @media print {
+              body { padding: 0; }
+              @page { margin: 1.5cm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">ContainerShield</div>
+              <div class="subtitle">Vulnerability Scan Analysis Report</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-weight: bold; font-size: 14px;">${imageName}</div>
+              <div class="subtitle">Scan #${scan.id || id} • ${dateStr}</div>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card" style="background: #f8fafc;">
+              <div class="label">Total Findings</div>
+              <div class="val">${scan.totalVulnerabilities || 0}</div>
+            </div>
+            <div class="summary-card" style="background: #fff1f2; border-color: #fecdd3;">
+              <div class="label" style="color: #be123c;">Critical</div>
+              <div class="val" style="color: #be123c;">${scan.critical || 0}</div>
+            </div>
+            <div class="summary-card" style="background: #fff7ed; border-color: #ffedd5;">
+              <div class="label" style="color: #c2410c;">High</div>
+              <div class="val" style="color: #c2410c;">${scan.high || 0}</div>
+            </div>
+            <div class="summary-card" style="background: #fffbeb; border-color: #fef3c7;">
+              <div class="label" style="color: #b45309;">Medium</div>
+              <div class="val" style="color: #b45309;">${scan.medium || 0}</div>
+            </div>
+            <div class="summary-card" style="background: #ecfdf5; border-color: #a7f3d0;">
+              <div class="label" style="color: #047857;">Low</div>
+              <div class="val" style="color: #047857;">${scan.low || 0}</div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 14px; margin-bottom: 8px;">Detailed Vulnerabilities (${vulns.length})</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Severity</th>
+                <th>CVE / Vulnerability ID</th>
+                <th>Package Name</th>
+                <th>Installed Version</th>
+                <th>Fixed Version</th>
+                <th>Title</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${vulnsRowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+
   if (loading) return <LoadingState title={`Loading Scan #${id} details...`} />;
   if (error) return <ErrorState message={error} onRetry={fetchScan} />;
-
-  const vulns = scan?.vulnerabilities || [];
 
   const filteredVulns = vulns.filter((v) => {
     const matchSev = filterSeverity === 'ALL' || v.severity === filterSeverity;
@@ -60,64 +206,51 @@ export default function ScanDetails() {
         <ArrowLeft className="w-4 h-4" /> Back to Scan History
       </Link>
 
-      {/* Main Header Banner */}
-      <Card>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-brand-50 dark:bg-brand-600/20 border border-brand-200 dark:border-brand-500/30 rounded-xl text-brand-600 dark:text-brand-400">
-              <ShieldAlert className="w-8 h-8" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 font-mono text-xs text-slate-500 dark:text-slate-400">
-                <span>Scan Record #{scan?.id}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {scan?.scanTime ? new Date(scan.scanTime).toLocaleString() : 'N/A'}
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5">{scan?.imageName}</h2>
-            </div>
+      {/* Target Image Summary */}
+      <Card
+        title={`Scan Record #${scan?.id || id} • ${scan?.scanDate ? new Date(scan.scanDate).toLocaleString() : ''}`}
+        subtitle={scan?.imageName || 'Unknown Image Target'}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" icon={FileSpreadsheet} onClick={handleDownloadCSV}>
+              Download CSV
+            </Button>
+            <Button variant="secondary" size="sm" icon={FileText} onClick={handleDownloadPDF}>
+              Download PDF
+            </Button>
+            <Button variant="primary" size="sm" icon={Bot} onClick={() => navigate(`/assistant?project=${encodeURIComponent(scan?.imageName || '')}`)}>
+              Ask AI Assistant
+            </Button>
+          </div>
+        }
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="p-4 bg-slate-100 dark:bg-dark-900 border border-slate-200 dark:border-dark-700/60 rounded-xl text-center">
+            <span className="text-[10px] uppercase font-mono text-slate-500 dark:text-slate-400 font-semibold">Total Findings</span>
+            <p className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-1">{scan?.totalVulnerabilities}</p>
           </div>
 
-          <Button
-            variant="primary"
-            size="md"
-            icon={Bot}
-            onClick={() => navigate(`/assistant?project=${encodeURIComponent(scan?.imageName || '')}`)}
-          >
-            Ask AI Assistant
-          </Button>
+          <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 rounded-xl text-center">
+            <span className="text-[10px] uppercase font-mono text-rose-700 dark:text-rose-400 font-bold">Critical</span>
+            <p className="text-2xl font-bold font-mono text-rose-700 dark:text-rose-400 mt-1">{scan?.critical}</p>
+          </div>
+
+          <div className="p-4 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/50 rounded-xl text-center">
+            <span className="text-[10px] uppercase font-mono text-orange-700 dark:text-orange-400 font-bold">High</span>
+            <p className="text-2xl font-bold font-mono text-orange-700 dark:text-orange-400 mt-1">{scan?.high}</p>
+          </div>
+
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 rounded-xl text-center">
+            <span className="text-[10px] uppercase font-mono text-amber-800 dark:text-amber-400 font-bold">Medium</span>
+            <p className="text-2xl font-bold font-mono text-amber-800 dark:text-amber-400 mt-1">{scan?.medium}</p>
+          </div>
+
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-center">
+            <span className="text-[10px] uppercase font-mono text-emerald-800 dark:text-emerald-400 font-bold">Low</span>
+            <p className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-400 mt-1">{scan?.low}</p>
+          </div>
         </div>
       </Card>
-
-      {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-4 bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700/60 rounded-xl text-center shadow-xs">
-          <span className="text-[10px] uppercase font-mono text-slate-500 dark:text-slate-400 font-semibold">Total Findings</span>
-          <p className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-1">{scan?.totalVulnerabilities}</p>
-        </div>
-
-        <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 rounded-xl text-center">
-          <span className="text-[10px] uppercase font-mono text-rose-700 dark:text-rose-400 font-bold">Critical</span>
-          <p className="text-2xl font-bold font-mono text-rose-700 dark:text-rose-400 mt-1">{scan?.critical}</p>
-        </div>
-
-        <div className="p-4 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/50 rounded-xl text-center">
-          <span className="text-[10px] uppercase font-mono text-orange-700 dark:text-orange-400 font-bold">High</span>
-          <p className="text-2xl font-bold font-mono text-orange-700 dark:text-orange-400 mt-1">{scan?.high}</p>
-        </div>
-
-        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 rounded-xl text-center">
-          <span className="text-[10px] uppercase font-mono text-amber-800 dark:text-amber-400 font-bold">Medium</span>
-          <p className="text-2xl font-bold font-mono text-amber-800 dark:text-amber-400 mt-1">{scan?.medium}</p>
-        </div>
-
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-center">
-          <span className="text-[10px] uppercase font-mono text-emerald-800 dark:text-emerald-400 font-bold">Low</span>
-          <p className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-400 mt-1">{scan?.low}</p>
-        </div>
-      </div>
 
       {/* Vulnerabilities Breakdown Table */}
       <Card title="Detailed Vulnerabilities List" subtitle={`Showing ${filteredVulns.length} of ${vulns.length} vulnerabilities`}>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -6,7 +6,6 @@ import {
   X,
   LayoutDashboard,
   Box,
-  Layers,
   Search,
   History,
   Code2,
@@ -15,6 +14,7 @@ import {
   Sun,
   Moon
 } from 'lucide-react';
+import DockerIcon from '../common/DockerIcon';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function MobileNav({ isOpen, onClose }) {
@@ -23,7 +23,7 @@ export default function MobileNav({ isOpen, onClose }) {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Containers', path: '/containers', icon: Box },
-    { label: 'Images', path: '/images', icon: Layers },
+    { label: 'Images', path: '/images', icon: DockerIcon },
     { label: 'Scan Image', path: '/scans/new', icon: Search },
     { label: 'Scan History', path: '/scans/history', icon: History },
     { label: 'Source Scanner', path: '/source-scan', icon: Code2 },

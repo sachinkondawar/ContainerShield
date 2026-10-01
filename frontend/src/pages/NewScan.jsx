@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, FileCode, Upload, ShieldAlert, CheckCircle2, FileText, ArrowRight, Loader2 } from 'lucide-react';
 import Card from '../components/common/Card';
@@ -427,3 +427,4 @@ export default function NewScan() {
     </div>
   );
 }
+

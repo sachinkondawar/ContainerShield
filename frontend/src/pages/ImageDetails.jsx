@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Layers, ArrowLeft, Search, History, Clock, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Search, History, Clock, ShieldAlert } from 'lucide-react';
+import DockerIcon from '../components/common/DockerIcon';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -46,7 +47,7 @@ export default function ImageDetails() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-brand-50 dark:bg-brand-600/20 border border-brand-200 dark:border-brand-500/30 rounded-xl text-brand-600 dark:text-brand-400">
-              <Layers className="w-8 h-8" />
+              <DockerIcon className="w-8 h-8" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-mono">{imageName}</h2>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Code2, Search, Play, FileCode, AlertTriangle, ShieldCheck, Bot, Loader2, Folder } from 'lucide-react';
+import { Code2, Search, Play, FileCode, AlertTriangle, ShieldCheck, Bot, Loader2, FolderSearch } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -8,11 +8,20 @@ import Drawer from '../components/common/Drawer';
 import ErrorState from '../components/common/ErrorState';
 import { scanProject } from '../services/semgrepService';
 
+const deriveProjectName = (pathStr) => {
+  if (!pathStr) return '';
+  const cleanPath = pathStr.trim().replace(/[/\\\\]+$/, '');
+  const segments = cleanPath.split(/[/\\\\]/);
+  const lastSegment = segments[segments.length - 1] || cleanPath;
+  return lastSegment.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+};
+
 export default function SourceScanner() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [projectPath, setProjectPath] = useState('d:/Final Year Project/ContainerShield/containershield');
-  const [projectName, setProjectName] = useState('myapp:1.0');
+  const [projectName, setProjectName] = useState(() => deriveProjectName('d:/Final Year Project/ContainerShield/containershield'));
 
   const [isScanning, setIsScanning] = useState(false);
   const [findings, setFindings] = useState(null);
@@ -22,10 +31,57 @@ export default function SourceScanner() {
   const [filterClass, setFilterClass] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const handleBrowseFolderClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFolderSelect = (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const firstFile = files[0];
+    let folderPath = '';
+    let folderName = '';
+
+    if (firstFile.path) {
+      const fullFilePath = firstFile.path.replace(/\\/g, '/');
+      const relativePath = (firstFile.webkitRelativePath || '').replace(/\\/g, '/');
+
+      if (relativePath) {
+        folderName = relativePath.split('/')[0];
+        const relIdx = fullFilePath.toLowerCase().lastIndexOf(relativePath.toLowerCase());
+        if (relIdx !== -1) {
+          folderPath = fullFilePath.substring(0, relIdx + folderName.length);
+        }
+      }
+
+      if (!folderPath) {
+        folderPath = fullFilePath.substring(0, fullFilePath.lastIndexOf('/'));
+      }
+    } else if (firstFile.webkitRelativePath) {
+      folderName = firstFile.webkitRelativePath.split('/')[0];
+      folderPath = folderName;
+    }
+
+    if (folderPath) {
+      setProjectPath(folderPath);
+      setProjectName(deriveProjectName(folderName || folderPath));
+    }
+  };
+
+  const handleProjectPathChange = (e) => {
+    const val = e.target.value;
+    setProjectPath(val);
+    setProjectName(deriveProjectName(val));
+  };
+
   const handleStartScan = async (e) => {
     e.preventDefault();
     if (!projectPath.trim() || !projectName.trim()) {
-      setError('Please provide both server project path and project name.');
+      setError('Please provide a valid project folder path.');
       return;
     }
 
@@ -63,12 +119,12 @@ export default function SourceScanner() {
       {/* Scan Setup Form */}
       <Card title="Semgrep Source Code Security Scanner" subtitle="Scan Java source code for security vulnerabilities (e.g. SQL injection, unsafe deserialization)">
         <form onSubmit={handleStartScan} className="space-y-6">
-          <div className="p-4 bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-800/40 rounded-xl flex items-start gap-3">
+          <div className="p-4 bg-brand-50 dark:bg-dark-900 border border-brand-200 dark:border-brand-800/60 rounded-xl flex items-start gap-3">
             <Code2 className="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
             <div className="text-xs text-slate-700 dark:text-slate-300">
               <p className="font-semibold text-slate-900 dark:text-slate-100">Server-Side Project Path Requirement</p>
               <p className="mt-0.5 text-slate-600 dark:text-slate-400">
-                Semgrep runs directly on the backend host server. Enter the local filesystem folder path accessible to the Spring Boot application.
+                Semgrep runs directly on the backend host server. Select a project folder from your local computer or type/paste the path to derive the project identifier.
               </p>
             </div>
           </div>
@@ -79,14 +135,34 @@ export default function SourceScanner() {
               <label className="block uppercase text-slate-700 dark:text-slate-300 font-semibold">
                 Project Folder Path <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={projectPath}
-                onChange={(e) => setProjectPath(e.target.value)}
-                placeholder="e.g. /path/to/project or C:/Projects/MyApp"
-                className="w-full bg-white dark:bg-dark-900 border border-slate-300 dark:border-dark-700 rounded-lg px-3.5 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 shadow-xs"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={projectPath}
+                  onChange={handleProjectPathChange}
+                  placeholder="Select or enter full project folder path..."
+                  className="w-full bg-white dark:bg-dark-900 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-dark-700 rounded-lg px-3.5 py-2.5 shadow-xs focus:outline-none focus:border-brand-500 font-mono text-xs"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  icon={FolderSearch}
+                  onClick={handleBrowseFolderClick}
+                  className="shrink-0"
+                >
+                  Browse Folder
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFolderSelect}
+                  webkitdirectory=""
+                  directory=""
+                  style={{ display: 'none' }}
+                />
+              </div>
             </div>
 
             {/* Project Name */}
@@ -98,12 +174,14 @@ export default function SourceScanner() {
                 type="text"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g. myapp:1.0"
-                className="w-full bg-white dark:bg-dark-900 border border-slate-300 dark:border-dark-700 rounded-lg px-3.5 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 shadow-xs"
+                placeholder="Auto-derived from selected folder"
+                className="w-full bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-dark-700 rounded-lg px-3.5 py-2.5 shadow-xs focus:outline-none font-mono text-xs"
                 required
               />
             </div>
           </div>
+
+          {error && <ErrorState message={error} />}
 
           <div>
             <Button
@@ -120,20 +198,12 @@ export default function SourceScanner() {
         </form>
       </Card>
 
-      {/* Error View */}
-      {error && <ErrorState message={error} />}
-
-      {/* Honest Loading view */}
+      {/* Progress / Status banner during scan */}
       {isScanning && (
-        <Card bodyClassName="py-12 flex flex-col items-center justify-center text-center">
-          <div className="relative mb-4">
-            <div className="p-4 bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/50 rounded-full text-purple-600 dark:text-purple-400">
-              <Code2 className="w-10 h-10 animate-pulse" />
-            </div>
-            <Loader2 className="w-6 h-6 animate-spin text-purple-600 dark:text-purple-400 absolute -bottom-1 -right-1 bg-white dark:bg-dark-900 rounded-full p-1 border border-purple-500/50" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">Analyzing source code at "{projectPath}"...</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1">
+        <Card className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+          <Loader2 className="w-8 h-8 text-brand-600 dark:text-brand-400 animate-spin" />
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Scanning Project Codebase...</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
             Running Semgrep Java security ruleset (p/java). Checking code patterns for SQL injection, hardcoded secrets, and unsafe API usages.
           </p>
         </Card>
@@ -289,3 +359,4 @@ export default function SourceScanner() {
     </div>
   );
 }
+

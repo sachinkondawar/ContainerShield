@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Box,
-  Layers,
   ShieldAlert,
   History,
   Search,
@@ -15,6 +14,7 @@ import {
   Clock,
   ChevronRight
 } from 'lucide-react';
+import DockerIcon from '../components/common/DockerIcon';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -118,7 +118,7 @@ export default function Dashboard() {
               Docker Images
             </span>
             <div className="p-2 bg-blue-100 dark:bg-brand-950/60 border border-blue-300 dark:border-brand-800/50 rounded-lg text-brand-700 dark:text-brand-400">
-              <Layers className="w-5 h-5" />
+              <DockerIcon className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline justify-between">
@@ -134,7 +134,7 @@ export default function Dashboard() {
         <Card className="hover:border-slate-300 dark:hover:border-dark-600 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
-              Scans Recorded
+              Total Scans
             </span>
             <div className="p-2 bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800/50 rounded-lg text-purple-700 dark:text-purple-400">
               <History className="w-5 h-5" />
@@ -142,90 +142,74 @@ export default function Dashboard() {
           </div>
           <div className="mt-3 flex items-baseline justify-between">
             <span className="text-3xl font-bold font-mono text-slate-900 dark:text-slate-100">{scans.length}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Stored in DB</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Stored scans</span>
           </div>
           <div className="mt-2 text-[11px] text-purple-700 dark:text-purple-400 flex items-center gap-1 font-mono font-medium">
-            PostgreSQL History
+            PostgreSQL Scan History
           </div>
         </Card>
 
-        {/* Critical & High Findings */}
+        {/* Total Vulnerabilities */}
         <Card className="hover:border-slate-300 dark:hover:border-dark-600 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
-              Critical Findings
+              Vulnerabilities
             </span>
             <div className="p-2 bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/50 rounded-lg text-rose-700 dark:text-rose-400">
               <ShieldAlert className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-3xl font-bold font-mono text-rose-600 dark:text-rose-400">{criticalCount}</span>
-            <span className="text-xs text-orange-600 dark:text-orange-400 font-mono font-semibold">{highCount} High</span>
+            <span className="text-3xl font-bold font-mono text-rose-600 dark:text-rose-400">{totalVulnerabilities}</span>
+            <span className="text-xs text-rose-700 dark:text-rose-400 font-mono font-bold">{criticalCount} Critical</span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
-            {totalVulnerabilities} total vulnerabilities
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+            {highCount} High • {mediumCount} Medium
           </div>
         </Card>
       </div>
 
-      {/* Quick Security Workflows / Actions */}
+      {/* Quick Action Navigation Panels */}
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono mb-4">
-          Quick Actions
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-mono mb-4">
+          Quick Security Actions
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={() => navigate('/scans/new')}
-            className="p-4 bg-white dark:bg-dark-850 hover:bg-slate-50 dark:hover:bg-dark-800 border border-slate-200 dark:border-dark-700/60 hover:border-brand-500/50 rounded-xl transition-all text-left group flex flex-col justify-between shadow-xs hover:shadow-md"
+            className="p-5 bg-white dark:bg-dark-950 border border-slate-200 dark:border-dark-700/60 hover:border-brand-500 dark:hover:border-brand-500 rounded-xl text-left transition-all group shadow-xs flex flex-col justify-between"
           >
             <div>
               <div className="p-2.5 bg-brand-50 dark:bg-brand-600/20 border border-brand-200 dark:border-brand-500/30 rounded-lg w-fit text-brand-600 dark:text-brand-400 mb-3 group-hover:scale-105 transition-transform">
                 <Search className="w-5 h-5" />
               </div>
-              <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Scan Image (Trivy)</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Scan Docker image or pom.xml manifest for vulnerabilities.</p>
+              <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Scan Docker Image</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Run Trivy vulnerability scanner on local or remote Docker images.</p>
             </div>
             <div className="mt-4 flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400 font-semibold group-hover:translate-x-1 transition-transform">
-              Start Scan <ArrowRight className="w-3.5 h-3.5" />
+              Launch Scanner <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
 
           <button
             onClick={() => navigate('/source-scan')}
-            className="p-4 bg-white dark:bg-dark-850 hover:bg-slate-50 dark:hover:bg-dark-800 border border-slate-200 dark:border-dark-700/60 hover:border-purple-500/50 rounded-xl transition-all text-left group flex flex-col justify-between shadow-xs hover:shadow-md"
+            className="p-5 bg-white dark:bg-dark-950 border border-slate-200 dark:border-dark-700/60 hover:border-purple-500 dark:hover:border-purple-500 rounded-xl text-left transition-all group shadow-xs flex flex-col justify-between"
           >
             <div>
               <div className="p-2.5 bg-purple-50 dark:bg-purple-600/20 border border-purple-200 dark:border-purple-500/30 rounded-lg w-fit text-purple-600 dark:text-purple-400 mb-3 group-hover:scale-105 transition-transform">
                 <Code2 className="w-5 h-5" />
               </div>
               <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Source Code Scanner</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Run Semgrep static analysis on project source code.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Run Semgrep static analysis on Java code for security bugs.</p>
             </div>
             <div className="mt-4 flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 font-semibold group-hover:translate-x-1 transition-transform">
-              Scan Source <ArrowRight className="w-3.5 h-3.5" />
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/assistant')}
-            className="p-4 bg-white dark:bg-dark-850 hover:bg-slate-50 dark:hover:bg-dark-800 border border-slate-200 dark:border-dark-700/60 hover:border-indigo-500/50 rounded-xl transition-all text-left group flex flex-col justify-between shadow-xs hover:shadow-md"
-          >
-            <div>
-              <div className="p-2.5 bg-indigo-50 dark:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-500/30 rounded-lg w-fit text-indigo-600 dark:text-indigo-400 mb-3 group-hover:scale-105 transition-transform">
-                <Bot className="w-5 h-5" />
-              </div>
-              <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">AI Security Assistant</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Ask local Ollama LLM questions based on scan findings.</p>
-            </div>
-            <div className="mt-4 flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 font-semibold group-hover:translate-x-1 transition-transform">
-              Open Assistant <ArrowRight className="w-3.5 h-3.5" />
+              Open Semgrep <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
 
           <button
             onClick={() => navigate('/containers')}
-            className="p-4 bg-white dark:bg-dark-850 hover:bg-slate-50 dark:hover:bg-dark-800 border border-slate-200 dark:border-dark-700/60 hover:border-emerald-500/50 rounded-xl transition-all text-left group flex flex-col justify-between shadow-xs hover:shadow-md"
+            className="p-5 bg-white dark:bg-dark-950 border border-slate-200 dark:border-dark-700/60 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-xl text-left transition-all group shadow-xs flex flex-col justify-between"
           >
             <div>
               <div className="p-2.5 bg-emerald-50 dark:bg-emerald-600/20 border border-emerald-200 dark:border-emerald-500/30 rounded-lg w-fit text-emerald-600 dark:text-emerald-400 mb-3 group-hover:scale-105 transition-transform">
