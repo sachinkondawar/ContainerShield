@@ -4,6 +4,9 @@ import com.example.containershield.entity.SourceCodeFinding;
 import com.example.containershield.entity.VulnerabilityFinding;
 import com.example.containershield.repository.SourceCodeFindingRepository;
 import com.example.containershield.repository.VulnerabilityFindingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,12 +16,20 @@ import java.util.Map;
 @Service
 public class ChatService {
 
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
+
     private final VulnerabilityFindingRepository vulnerabilityFindingRepository;
     private final SourceCodeFindingRepository sourceCodeFindingRepository;
     private final RestTemplate restTemplate;
 
-    private static final String OLLAMA_URL = "http://localhost:11434/api/generate";
-    private static final String MODEL = "qwen2.5-coder:7b";
+    @Value("${ollama.url:http://localhost:11434/api/generate}")
+    private String ollamaUrl;
+
+    @Value("${ollama.model:qwen2.5-coder:1.5b}")
+    private String ollamaModel;
+
+    @Value("${ollama.num-ctx:4096}")
+    private int ollamaNumCtx;
 
     public ChatService(
             VulnerabilityFindingRepository vulnerabilityFindingRepository,
@@ -68,7 +79,9 @@ public class ChatService {
             return "None found.";
         }
         StringBuilder sb = new StringBuilder();
-        for (VulnerabilityFinding f : findings) {
+        int max = Math.min(findings.size(), 50);
+        for (int i = 0; i < max; i++) {
+            VulnerabilityFinding f = findings.get(i);
             sb.append("- ").append(f.getPackageName())
                     .append(" (").append(f.getSeverity()).append("): ")
                     .append("installed ").append(f.getInstalledVersion())
@@ -78,6 +91,9 @@ public class ChatService {
                                     : f.getFixedVersion())
                     .append("\n");
         }
+        if (findings.size() > 50) {
+            sb.append("... and ").append(findings.size() - 50).append(" more dependency findings omitted for brevity.\n");
+        }
         return sb.toString();
     }
 
@@ -86,29 +102,45 @@ public class ChatService {
             return "None found.";
         }
         StringBuilder sb = new StringBuilder();
-        for (SourceCodeFinding f : findings) {
+        int max = Math.min(findings.size(), 50);
+        for (int i = 0; i < max; i++) {
+            SourceCodeFinding f = findings.get(i);
             sb.append("- File: ").append(f.getFilePath())
                     .append(", Line: ").append(f.getStartLine())
                     .append(", Severity: ").append(f.getSeverity())
                     .append(", Issue: ").append(f.getMessage())
                     .append("\n");
         }
+        if (findings.size() > 50) {
+            sb.append("... and ").append(findings.size() - 50).append(" more source findings omitted for brevity.\n");
+        }
         return sb.toString();
     }
 
     private String callOllama(String prompt) {
+        try {
+            log.info("Calling Ollama at {} using model {}", ollamaUrl, ollamaModel);
+            Map<String, Object> requestBody = Map.of(
+                    "model", ollamaModel,
+                    "prompt", prompt,
+                    "stream", false,
+                    "options", Map.of("num_ctx", ollamaNumCtx)
+            );
 
-        Map<String, Object> requestBody = Map.of(
-                "model", MODEL,
-                "prompt", prompt,
-                "stream", false,
-                "options", Map.of("num_ctx", 8192)
-        );
+            Map<String, Object> response = restTemplate.postForObject(
+                    ollamaUrl, requestBody, Map.class
+            );
 
-        Map<String, Object> response = restTemplate.postForObject(
-                OLLAMA_URL, requestBody, Map.class
-        );
-
-        return response != null ? (String) response.get("response") : "No response from model.";
+            if (response != null && response.containsKey("response")) {
+                return (String) response.get("response");
+            } else {
+                log.warn("Received null or empty response from Ollama");
+                return "No response received from the Ollama model.";
+            }
+        } catch (Exception e) {
+            log.error("Error communicating with Ollama: {}", e.getMessage(), e);
+            return "Unable to get an AI response from Ollama: " + e.getMessage() +
+                   ". Please check if Ollama is running and has sufficient RAM for model '" + ollamaModel + "'.";
+        }
     }
 }
