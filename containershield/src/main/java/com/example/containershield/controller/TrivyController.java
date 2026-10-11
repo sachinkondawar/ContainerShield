@@ -3,7 +3,10 @@ package com.example.containershield.controller;
 import com.example.containershield.dto.FixSuggestion;
 import com.example.containershield.dto.TrivyVulnerability;
 import com.example.containershield.service.ManifestMatcherService;
+import com.example.containershield.service.ScanHistoryService;
 import com.example.containershield.service.TrivyService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,17 +18,28 @@ import java.util.List;
 @RequestMapping("/api/trivy")
 public class TrivyController {
 
+    private static final Logger log = LoggerFactory.getLogger(TrivyController.class);
+
     private final TrivyService trivyService;
     private final ManifestMatcherService manifestMatcherService;
+    private final ScanHistoryService scanHistoryService;
 
-    public TrivyController(TrivyService trivyService, ManifestMatcherService manifestMatcherService) {
+    public TrivyController(TrivyService trivyService,
+                           ManifestMatcherService manifestMatcherService,
+                           ScanHistoryService scanHistoryService) {
         this.trivyService = trivyService;
         this.manifestMatcherService = manifestMatcherService;
+        this.scanHistoryService = scanHistoryService;
     }
 
     @GetMapping("/scan")
     public ResponseEntity<List<TrivyVulnerability>> scanImage(@RequestParam("image") String imageName) {
         List<TrivyVulnerability> results = trivyService.scanImage(imageName);
+        try {
+            scanHistoryService.saveScan(imageName, results);
+        } catch (Exception e) {
+            log.warn("Failed to record scan history for {}: {}", imageName, e.getMessage());
+        }
         return ResponseEntity.ok(results);
     }
 
@@ -35,6 +49,11 @@ public class TrivyController {
             @RequestParam("manifest") MultipartFile manifestFile) {
         try {
             List<TrivyVulnerability> findings = trivyService.scanImage(imageName);
+            try {
+                scanHistoryService.saveScan(imageName, findings);
+            } catch (Exception e) {
+                log.warn("Failed to record scan history for {}: {}", imageName, e.getMessage());
+            }
             String pomXmlContent = new String(manifestFile.getBytes(), StandardCharsets.UTF_8);
             List<FixSuggestion> suggestions = manifestMatcherService.matchAgainstPomXml(pomXmlContent, findings);
             return ResponseEntity.ok(suggestions);

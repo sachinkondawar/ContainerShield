@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, FileCode, Upload, ShieldAlert, CheckCircle2, FileText, ArrowRight, Loader2 } from 'lucide-react';
 import Card from '../components/common/Card';
@@ -99,11 +99,10 @@ export default function NewScan() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
               onClick={() => setScanType('standard')}
-              className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                scanType === 'standard'
-                  ? 'bg-blue-50 dark:bg-brand-950/40 border-brand-500 shadow-sm'
-                  : 'bg-slate-50 dark:bg-dark-900/60 border-slate-200 dark:border-dark-700/60 hover:border-slate-300 dark:hover:border-dark-600'
-              }`}
+              className={`p-4 rounded-xl border cursor-pointer transition-all ${scanType === 'standard'
+                ? 'bg-blue-50 dark:bg-brand-950/40 border-brand-500 shadow-sm'
+                : 'bg-slate-50 dark:bg-dark-900/60 border-slate-200 dark:border-dark-700/60 hover:border-slate-300 dark:hover:border-dark-600'
+                }`}
             >
               <div className="flex items-center gap-3 mb-2">
                 <Search className={`w-5 h-5 ${scanType === 'standard' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`} />
@@ -116,11 +115,10 @@ export default function NewScan() {
 
             <div
               onClick={() => setScanType('manifest')}
-              className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                scanType === 'manifest'
-                  ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 shadow-sm'
-                  : 'bg-slate-50 dark:bg-dark-900/60 border-slate-200 dark:border-dark-700/60 hover:border-slate-300 dark:hover:border-dark-600'
-              }`}
+              className={`p-4 rounded-xl border cursor-pointer transition-all ${scanType === 'manifest'
+                ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 shadow-sm'
+                : 'bg-slate-50 dark:bg-dark-900/60 border-slate-200 dark:border-dark-700/60 hover:border-slate-300 dark:hover:border-dark-600'
+                }`}
             >
               <div className="flex items-center gap-3 mb-2">
                 <FileCode className={`w-5 h-5 ${scanType === 'manifest' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400'}`} />
@@ -160,13 +158,14 @@ export default function NewScan() {
                     const full = img.tag ? `${img.name}:${img.tag}` : img.name;
                     return (
                       <option key={i} value={full}>
-                        {full}
+                        ⚡ {full} (Local)
                       </option>
                     );
                   })}
                 </select>
               )}
             </div>
+
           </div>
 
           {/* pom.xml Manifest File Upload input */}
@@ -234,7 +233,7 @@ export default function NewScan() {
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">Scanning image "{imageName}"...</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1">
-            Running Trivy vulnerability engine on host. This process analyzes OS vulnerabilities, installed packages, and library dependencies.
+            Running optimized Trivy vulnerability engine on host. Evaluating OS packages, CVEs, and library dependencies.
           </p>
         </Card>
       )}
@@ -274,11 +273,10 @@ export default function NewScan() {
                   <button
                     key={sev}
                     onClick={() => setResultFilter(sev)}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-colors ${
-                      resultFilter === sev
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-slate-100 dark:bg-dark-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-colors ${resultFilter === sev
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-slate-100 dark:bg-dark-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
                   >
                     {sev}
                   </button>
